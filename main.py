@@ -53,13 +53,13 @@ def draw(canvas):
     curses.curs_set(False)
     while True:
         shot.send(None)
-        # try:
-        #     for coroutine in coroutines.copy():
-        #         coroutine.send(None)
-        # except StopIteration:
-        #     coroutines.remove(coroutine)
-        # if len(coroutines) == 0:
-        #     break
+        try:
+            for coroutine in coroutines.copy():
+                coroutine.send(None)
+        except StopIteration:
+            coroutines.remove(coroutine)
+        if len(coroutines) == 0:
+            break
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 
