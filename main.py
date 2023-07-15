@@ -1,7 +1,11 @@
 import time
 import curses
 import asyncio
+import random
 from random import randint
+
+
+TIC_TIMEOUT = 0.1
 
 
 def draw(canvas):
@@ -12,37 +16,26 @@ def draw(canvas):
                         symbol='*') for _ in range(6)]
     curses.curs_set(False)
     while True:
-        # canvas.addstr(row, column, '*', curses.A_DIM)
-        # canvas.refresh()
-        # time.sleep(2)
-        # canvas.addstr(row, column, '*',)
-        # canvas.refresh()
-        # time.sleep(0.3)
-        # canvas.addstr(row, column, '*', curses.A_BOLD)
-        # canvas.refresh()
-        # time.sleep(0.5)
-        # canvas.addstr(row, column, '*',)
-        # canvas.refresh()
-        # time.sleep(0.3)
         for coroutine in coroutines:
             coroutine.send(None)
         canvas.refresh()
-        time.sleep(0)
+        time.sleep(TIC_TIMEOUT)
 
 
 async def blink(canvas, row, column, symbol='*'):
+    frames = [
+        {'style': curses.A_DIM, 'delay': 20},
+        {'style': curses.A_NORMAL, 'delay': 3},
+        {'style': curses.A_BOLD, 'delay': 5},
+        {'style': curses.A_NORMAL, 'delay': 3}
+    ]
+
     while True:
-        canvas.addstr(row, column, symbol, curses.A_DIM)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
+        for frame in frames:
+            canvas.addstr(row, column, symbol, frame['style'])
+            delay = frame['delay']
+            for _ in range(delay):
+                await asyncio.sleep(0)
 
 
 if __name__ == '__main__':
