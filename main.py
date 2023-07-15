@@ -14,7 +14,7 @@ def draw(canvas):
     coroutines = [blink(canvas,
                         row=random.randint(2, window_rows-2),
                         column=random.randint(2, window_columns-2),
-                        symbol=random.choice(star_sprites)) for _ in range(20)]
+                        symbol=random.choice(star_sprites)) for _ in range(100)]
     curses.curs_set(False)
     while True:
         for coroutine in coroutines:
@@ -34,7 +34,7 @@ async def blink(canvas, row, column, symbol='*'):
     while True:
         for frame in frames:
             canvas.addstr(row, column, symbol, frame['style'])
-            delay = frame['delay']
+            delay = random.randint(2, 5) + frame['delay']
             for _ in range(delay):
                 await asyncio.sleep(0)
 
