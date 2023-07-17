@@ -10,7 +10,8 @@ LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
-
+SHIP_WIDTH = 5
+SHIP_HEIGHT = 10
 SPACE_SHIP_ANIMATION_SLOWDOWN = 3
 
 ROCKET_FRAMES = [
@@ -149,29 +150,37 @@ def check_window_size(canvas):
             raise ValueError('The window is too small')
 
 
-async def animate_spaceship(canvas, rows, culumns):
+async def animate_spaceship(canvas, rows, columns):
     check_window_size(canvas)
 
     for frame in itertools.cycle(ROCKET_FRAMES):
         rows_direction, columns_direction, _ = read_controls(canvas)
-        rows += rows_direction
-        culumns += columns_direction
-        draw_frame(canvas, rows, culumns, frame)
+        draw_frame(canvas, rows, columns, frame)
         for _ in range(SPACE_SHIP_ANIMATION_SLOWDOWN):
             await asyncio.sleep(0)
-        draw_frame(canvas, rows, culumns, frame, negative=True)
+        draw_frame(canvas, rows, columns, frame, negative=True)
+        if rows_direction or columns_direction:
+            rows += rows_direction
+            rows = rows if rows > min(ROW_BORDERS) else min(ROW_BORDERS)
+            rows = rows if rows < max(ROW_BORDERS) else max(ROW_BORDERS)
+
+            columns += columns_direction
+            columns = columns if columns > min(COLUMN_BORDERS)\
+                else min(COLUMN_BORDERS)
+            columns = columns if columns < max(COLUMN_BORDERS)\
+                else max(COLUMN_BORDERS)
 
 
 def draw(canvas):
     star_sprites = '+*.:'
     window_rows, window_columns = canvas.getmaxyx()
+    global ROW_BORDERS
+    global COLUMN_BORDERS
+    ROW_BORDERS = (1, window_rows - SHIP_HEIGHT - 1)
+    COLUMN_BORDERS = (1, window_columns - SHIP_WIDTH - 1)
     space_ship_animation = animate_spaceship(canvas,
                                              window_rows/2,
                                              window_columns/2)
-    # shot = fire(canvas, window_rows-1,
-    #             window_columns/2,
-    #             rows_speed=-0.3,
-    #             columns_speed=0)
     stars = [blink(canvas,
                    row=random.randint(2, window_rows-2),
                    column=random.randint(2, window_columns-2),
