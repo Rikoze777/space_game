@@ -153,6 +153,9 @@ async def animate_spaceship(canvas, rows, culumns):
     check_window_size(canvas)
 
     for frame in itertools.cycle(ROCKET_FRAMES):
+        rows_direction, columns_direction, _ = read_controls(canvas)
+        rows += rows_direction
+        culumns += columns_direction
         draw_frame(canvas, rows, culumns, frame)
         for _ in range(SPACE_SHIP_ANIMATION_SLOWDOWN):
             await asyncio.sleep(0)
@@ -160,7 +163,6 @@ async def animate_spaceship(canvas, rows, culumns):
 
 
 def draw(canvas):
-    canvas.border()
     star_sprites = '+*.:'
     window_rows, window_columns = canvas.getmaxyx()
     space_ship_animation = animate_spaceship(canvas,
@@ -176,7 +178,9 @@ def draw(canvas):
                    symbol=random.choice(star_sprites))
              for _ in range(100)]
     coroutines = stars + [space_ship_animation]
+    canvas.border()
     curses.curs_set(False)
+    canvas.nodelay(True)
     while True:
         for coroutine in coroutines:
             coroutine.send(None)
