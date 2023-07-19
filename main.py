@@ -186,7 +186,7 @@ def draw(canvas):
                    row=random.randint(2, window_rows-2),
                    column=random.randint(2, window_columns-2),
                    offset_tics=blink_tics,
-                   symbol=random.choice(star_sprites))
+                   symbol=random.choice(star_sprites),)
              for _ in range(100)]
     coroutines = stars + [space_ship_animation]
     canvas.border()
