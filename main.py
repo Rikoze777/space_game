@@ -179,22 +179,31 @@ def draw(canvas):
     global COLUMN_BORDERS
     ROW_BORDERS = (1, window_rows - SHIP_HEIGHT - 1)
     COLUMN_BORDERS = (1, window_columns - SHIP_WIDTH - 1)
+    shot = fire(canvas,
+                window_rows/2,
+                window_columns/2,
+                rows_speed=-0.3,
+                columns_speed=0)
     space_ship_animation = animate_spaceship(canvas,
                                              window_rows/2,
-                                             window_columns/2)
-    stars = [blink(canvas,
-                   row=random.randint(2, window_rows-2),
-                   column=random.randint(2, window_columns-2),
-                   offset_tics=blink_tics,
-                   symbol=random.choice(star_sprites),)
-             for _ in range(100)]
-    coroutines = stars + [space_ship_animation]
+                                             window_columns/2 - 5)
+    coroutines = [blink(canvas,
+                        row=random.randint(2, window_rows-2),
+                        column=random.randint(2, window_columns-2),
+                        offset_tics=blink_tics,
+                        symbol=random.choice(star_sprites),)
+                  for _ in range(100)]
+    coroutines.append(space_ship_animation)
+    coroutines.append(shot)
     canvas.border()
     curses.curs_set(False)
     canvas.nodelay(True)
     while True:
-        for coroutine in coroutines:
-            coroutine.send(None)
+        for coroutine in coroutines.copy():
+            try:
+                coroutine.send(None)
+            except StopIteration:
+                coroutines.remove(coroutine)
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 
