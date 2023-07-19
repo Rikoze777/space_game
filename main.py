@@ -174,6 +174,7 @@ async def animate_spaceship(canvas, rows, columns):
 def draw(canvas):
     star_sprites = '+*.:'
     window_rows, window_columns = canvas.getmaxyx()
+    blink_tics = random.randint(2, 5)
     global ROW_BORDERS
     global COLUMN_BORDERS
     ROW_BORDERS = (1, window_rows - SHIP_HEIGHT - 1)
@@ -184,6 +185,7 @@ def draw(canvas):
     stars = [blink(canvas,
                    row=random.randint(2, window_rows-2),
                    column=random.randint(2, window_columns-2),
+                   offset_tics=blink_tics,
                    symbol=random.choice(star_sprites))
              for _ in range(100)]
     coroutines = stars + [space_ship_animation]
@@ -197,7 +199,7 @@ def draw(canvas):
         time.sleep(TIC_TIMEOUT)
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, offset_tics, symbol='*'):
     frames = [
         {'style': curses.A_DIM, 'delay': 20},
         {'style': curses.A_NORMAL, 'delay': 3},
@@ -208,7 +210,7 @@ async def blink(canvas, row, column, symbol='*'):
     while True:
         for frame in frames:
             canvas.addstr(row, column, symbol, frame['style'])
-            delay = random.randint(2, 5) + frame['delay']
+            delay = offset_tics + frame['delay']
             for _ in range(delay):
                 await asyncio.sleep(0)
 
