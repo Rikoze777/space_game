@@ -13,9 +13,7 @@ DOWN_KEY_CODE = 258
 SHIP_WIDTH = 5
 SHIP_HEIGHT = 10
 SPACE_SHIP_ANIMATION_SLOWDOWN = 3
-
-ROCKET_FRAMES = [
-    '''
+FRAME1 = '''
      .
     .'.
     |o|
@@ -25,8 +23,8 @@ ROCKET_FRAMES = [
     ( )
      )
     ( )
-    ''',
     '''
+FRAME2 = '''
      .
     .'.
     |o|
@@ -36,8 +34,8 @@ ROCKET_FRAMES = [
      )
     ( )
      (
-    ''',
-]
+    '''
+ROCKET_FRAMES = [FRAME1, FRAME1, FRAME2, FRAME2]
 
 
 def read_controls(canvas):
@@ -156,8 +154,7 @@ async def animate_spaceship(canvas, rows, columns):
     for frame in itertools.cycle(ROCKET_FRAMES):
         rows_direction, columns_direction, _ = read_controls(canvas)
         draw_frame(canvas, rows, columns, frame)
-        for _ in range(2):
-            await asyncio.sleep(0)
+        await asyncio.sleep(0)
         draw_frame(canvas, rows, columns, frame, negative=True)
         if rows_direction or columns_direction:
             rows += rows_direction
