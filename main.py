@@ -156,7 +156,8 @@ async def animate_spaceship(canvas, rows, columns):
     for frame in itertools.cycle(ROCKET_FRAMES):
         rows_direction, columns_direction, _ = read_controls(canvas)
         draw_frame(canvas, rows, columns, frame)
-        await asyncio.sleep(0)
+        for _ in range(2):
+            await asyncio.sleep(0)
         draw_frame(canvas, rows, columns, frame, negative=True)
         if rows_direction or columns_direction:
             rows += rows_direction
