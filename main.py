@@ -3,13 +3,13 @@ import curses
 import asyncio
 import random
 import itertools
+from curses_tools import (draw_frame, read_controls,
+                          get_frame_size, fire,
+                          fly_garbage, blink)
+import os, glob
+
 
 TIC_TIMEOUT = 0.1
-SPACE_KEY_CODE = 32
-LEFT_KEY_CODE = 260
-RIGHT_KEY_CODE = 261
-UP_KEY_CODE = 259
-DOWN_KEY_CODE = 258
 SHIP_WIDTH = 5
 SHIP_HEIGHT = 10
 SPACE_SHIP_ANIMATION_SLOWDOWN = 3
@@ -36,108 +36,6 @@ FRAME2 = '''
      (
     '''
 ROCKET_FRAMES = [FRAME1, FRAME1, FRAME2, FRAME2]
-
-
-def read_controls(canvas):
-    """Read keys pressed and returns tuple witl controls state."""
-    
-    rows_direction = columns_direction = 0
-    space_pressed = False
-
-    while True:
-        pressed_key_code = canvas.getch()
-
-        if pressed_key_code == -1:
-            # https://docs.python.org/3/library/curses.html#curses.window.getch
-            break
-
-        if pressed_key_code == UP_KEY_CODE:
-            rows_direction = -1
-
-        if pressed_key_code == DOWN_KEY_CODE:
-            rows_direction = 1
-
-        if pressed_key_code == RIGHT_KEY_CODE:
-            columns_direction = 1
-
-        if pressed_key_code == LEFT_KEY_CODE:
-            columns_direction = -1
-
-        if pressed_key_code == SPACE_KEY_CODE:
-            space_pressed = True
-    
-    return rows_direction, columns_direction, space_pressed
-
-
-def draw_frame(canvas, start_row, start_column, text, negative=False):
-    """Draw multiline text fragment on canvas, erase text instead of drawing if negative=True is specified."""
-    
-    rows_number, columns_number = canvas.getmaxyx()
-
-    for row, line in enumerate(text.splitlines(), round(start_row)):
-        if row < 0:
-            continue
-
-        if row >= rows_number:
-            break
-
-        for column, symbol in enumerate(line, round(start_column)):
-            if column < 0:
-                continue
-
-            if column >= columns_number:
-                break
-                
-            if symbol == ' ':
-                continue
-
-            # Check that current position it is not in a lower right corner of the window
-            # Curses will raise exception in that case. Don`t ask why…
-            # https://docs.python.org/3/library/curses.html#curses.window.addch
-            if row == rows_number - 1 and column == columns_number - 1:
-                continue
-
-            symbol = symbol if not negative else ' '
-            canvas.addch(row, column, symbol)
-
-
-def get_frame_size(text):
-    """Calculate size of multiline text fragment, return pair — number of rows and colums."""
-    
-    lines = text.splitlines()
-    rows = len(lines)
-    columns = max([len(line) for line in lines])
-    return rows, columns
-
-
-async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
-    """Display animation of gun shot, direction and speed can be specified."""
-
-    row, column = start_row, start_column
-
-    canvas.addstr(round(row), round(column), '*')
-    await asyncio.sleep(0)
-
-    canvas.addstr(round(row), round(column), 'O')
-    await asyncio.sleep(0)
-    canvas.addstr(round(row), round(column), ' ')
-
-    row += rows_speed
-    column += columns_speed
-
-    symbol = '-' if columns_speed else '|'
-
-    rows, columns = canvas.getmaxyx()
-    max_row, max_column = rows - 1, columns - 1
-
-    curses.beep()
-
-    while 0 < row < max_row and 0 < column < max_column:
-        canvas.addstr(round(row), round(column), symbol)
-        await asyncio.sleep(0)
-        canvas.addstr(round(row), round(column), ' ')
-        row += rows_speed
-        column += columns_speed
 
 
 def check_window_size(canvas):
@@ -169,6 +67,7 @@ async def animate_spaceship(canvas, rows, columns):
 
 
 def draw(canvas):
+    garbage_path = 'garbage/'
     star_sprites = '+*.:'
     window_rows, window_columns = canvas.getmaxyx()
     blink_tics = random.randint(2, 5)
@@ -190,6 +89,12 @@ def draw(canvas):
                         offset_tics=blink_tics,
                         symbol=random.choice(star_sprites),)
                   for _ in range(100)]
+    for filename in glob.glob(os.path.join(garbage_path, '*.txt')):
+        with open(os.path.join(os.getcwd(), filename), 'r') as garbage_file:
+            frame = garbage_file.read()
+        for _ in range(2):    
+            column = random.randint(5, window_columns - 5)
+            coroutines.append(fly_garbage(canvas, column, garbage_frame=frame))
     coroutines.append(space_ship_animation)
     coroutines.append(shot)
     canvas.border()
@@ -203,22 +108,6 @@ def draw(canvas):
                 coroutines.remove(coroutine)
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
-
-
-async def blink(canvas, row, column, offset_tics, symbol='*'):
-    frames = [
-        {'style': curses.A_DIM, 'delay': 20},
-        {'style': curses.A_NORMAL, 'delay': 3},
-        {'style': curses.A_BOLD, 'delay': 5},
-        {'style': curses.A_NORMAL, 'delay': 3}
-    ]
-
-    while True:
-        for frame in frames:
-            canvas.addstr(row, column, symbol, frame['style'])
-            delay = offset_tics + frame['delay']
-            for _ in range(delay):
-                await asyncio.sleep(0)
 
 
 if __name__ == '__main__':
